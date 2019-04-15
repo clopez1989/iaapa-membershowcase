@@ -2,56 +2,80 @@
 <html>
 <head>
     <meta charset='utf-8' />
-    <title>Add an icon to the map</title>
+    <title>Home</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
-    <style>
-        body { margin:0; padding:0; }
-        #map { position:absolute; top:0; bottom:0; width:100%; }
-    </style>
 </head>
+<style> #fullwidth-video{height: 50vw; min-height:50vh; position: relative;}
+        #fullwidth-video .fullwidth-video-bg {
+        position: absolute; z-index: 1; top: 0px; left: 0px; bottom:
+        0px; right: 0px; overflow: hidden;
+        background-size: cover; background-color: transparent; background-repeat: no-repeat;}
+        .sldtext {z-index: 2;}
+        #fullwidth-video video {
+        margin: auto; position: absolute; z-index: 1; top: 50%; left: 0%;
+        transform: translate(0%, -50%); visibility: visible;
+        opacity: 1; width: 100%; height: 100%; object-fit: cover;}
+        
+body{
+    margin:0px;
+}
+.bottomMenu{
+    background-color: white;
+    padding: 20px !important;
+    text-align: center;
+    z-index: 2;
+    position: fixed;
+    bottom:0px;
+    left: 0px;
+}
+.lightbox {
+	/** Default lightbox to hidden */
+	display: none;
+
+	/** Position and style */
+	position: fixed;
+	z-index: 999;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	top: 0;
+	left: 0;
+	background: rgba(0,0,0,0.8);
+}
+
+.lightbox img {
+	/** Pad the lightbox image */
+	max-width: 90%;
+	max-height: 80%;
+	margin-top: 2%;
+}
+
+.lightbox:target {
+	/** Remove default browser outline */
+	outline: none;
+
+	/** Unhide lightbox **/
+	display: block;
+}
+
+</style>
 <body>
-
-<div id='map'></div>
-
-<script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2pzbHdpeDY1MXdqYjQ5cDZ0am8zcWVvaCJ9.T58s8aUnx0yhcjyNTQ3fEA';
-
-var map = new mapboxgl.Map({
-    container: 'map',
-    style: 'mapbox://styles/mapbox/streets-v11'
-});
-
-map.on('load', function() {
-    map.loadImage('https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Cat_silhouette.svg/400px-Cat_silhouette.svg.png', function(error, image) {
-        if (error) throw error;
-        map.addImage('cat', image);
-        map.addLayer({
-            "id": "points",
-            "type": "symbol",
-            "source": {
-                "type": "geojson",
-                "data": {
-                    "type": "FeatureCollection",
-                    "features": [{
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": [0, 0]
-                        }
-                    }]
-                }
-            },
-            "layout": {
-                "icon-image": "cat",
-                "icon-size": 0.25
-            }
-        });
-    });
-});
-
-</script>
-
+    <div class="bottomMenu">
+            <a href="map.html" class="bottomMenuBtn">View Map</a>
+            <a href="#img1" class="bottomMenuBtn thumbnail">View More Videos</a>
+                  
+                  <!-- lightbox container hidden with CSS -->
+                  <a href="#_" class="lightbox" id="img1">
+                        <video playsinline="" muted="" onplaying="this.controls=false" autoplay loop>
+                        <source src="assets/videos/my-video.mp4" type='video/mp4;'></video>
+                  </a>
+    </div>
+    <div id="fullwidth-video">
+            <div class="fullwidth-video-bg">
+                <video playsinline="" muted="" onplaying="this.controls=false" autoplay loop>
+                <source src="assets/videos/my-video.mp4" type='video/mp4;'></video>
+            </div>
+    </div>
+</div>
 </body>
 </html>
