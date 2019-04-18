@@ -5,28 +5,47 @@
     <title>Home</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 </head>
-<style> #fullwidth-video{height: 50vw; min-height:50vh; position: relative;}
-        #fullwidth-video .fullwidth-video-bg {
-        position: absolute; z-index: 1; top: 0px; left: 0px; bottom:
-        0px; right: 0px; overflow: hidden;
-        background-size: cover; background-color: transparent; background-repeat: no-repeat;}
-        .sldtext {z-index: 2;}
-        #fullwidth-video video {
-        margin: auto; position: absolute; z-index: 1; top: 50%; left: 0%;
-        transform: translate(0%, -50%); visibility: visible;
-        opacity: 1; width: 100%; height: 100%; object-fit: cover;}
+<style>
+@font-face {
+  font-family: 'Gotham-Book';
+  src:  url('assets/fonts/Gotham-Book.otf') format('otf')
+}
+
+#fullwidth-video{height: 50vw; min-height:50vh; position: relative;}
+#fullwidth-video .fullwidth-video-bg {
+position: absolute; z-index: 1; top: 0px; left: 0px; bottom:
+0px; right: 0px; overflow: hidden;
+background-size: cover; background-color: transparent; background-repeat: no-repeat;}
+.sldtext {z-index: 2;}
+#fullwidth-video video {
+margin: auto; position: absolute; z-index: 1; top: 50%; left: 0%;
+transform: translate(0%, -50%); visibility: visible;
+opacity: 1; width: 100%; height: 100%; object-fit: cover;}
         
 body{
     margin:0px;
 }
 .bottomMenu{
-    background-color: white;
+    background-color: #00246c;
     padding: 20px !important;
     text-align: center;
     z-index: 2;
     position: fixed;
     bottom:0px;
     left: 0px;
+    width: 100%;
+}
+.bottomMenuBtn:first-child{
+    border-left: 0px solid white;
+}
+a.bottomMenuBtn{
+    width: 33%;
+    display: inline-block;
+    color: white;
+    font-family: 'Gotham-Book', Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    text-decoration: none;
+    border-left: 1px solid white;
 }
 .lightbox {
 	/** Default lightbox to hidden */
@@ -62,7 +81,8 @@ body{
 <body>
     <div class="bottomMenu">
             <a href="map.html" class="bottomMenuBtn">View Map</a>
-            <a href="#img1" class="bottomMenuBtn thumbnail">View More Videos</a>
+            <a href="#img1" class="bottomMenuBtn thumbnail">View Videos</a>
+            <a href="#img1" class="bottomMenuBtn thumbnail">Mission Statement</a>
                   
                   <!-- lightbox container hidden with CSS -->
                   <a href="#_" class="lightbox" id="img1">
