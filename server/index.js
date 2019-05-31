@@ -37,11 +37,33 @@ var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
 getToken()
 
 new Promise((resolve, reject) => {
-    getMembers(0, [], resolve, reject)
+    getMembers(0, 500, [], resolve, reject)
 })
-    .then(response => {
-        console.log(response)
-        console.log("DONE!!!!!!!!!!")
+    .then(members => {
+        console.log("DONE!")
+
+        // geocode a random member
+        var testMember = _.sample(members)
+        console.log(`geocoding address: ${testMember.address}`)
+
+        geocodingService.forwardGeocode({
+            query: testMember.address,
+            limit: 1
+        })
+            .send()
+            .then(response => {
+                try {
+                var features =  _.find(response.body.features, { 'type': 'Feature' })
+                var coordinates = features.geometry.coordinates
+                console.log(`${chalk.green('✓')}    ${testMember.id}: ${testMember.name} = ${features.place_name} (${coordinates})`)
+                } catch (err) {
+                    console.error(`${chalk.red('✗')}    could not geocode ${testMember.name} (${testMember.id}): ${testMember.address}`)
+                }
+                done = true
+            })
+
+
+        // todo: write final geocoded results to file/mongodb
     })
 
 function getToken() {
@@ -53,8 +75,6 @@ function getToken() {
 }
 
 function getMembersPage(pageIndex=0, pageSize=500) {
-
-    console.log(`getMembersPage(${pageIndex}, ${pageSize})`)
 
     return new Promise((resolve, reject) => {
         // reserve memory for data
@@ -103,15 +123,13 @@ function getMembersPage(pageIndex=0, pageSize=500) {
     })
 }
 
-function getMembers(pageIndex, membersArray, resolve, reject) {
-    getMembersPage(pageIndex)
+function getMembers(pageIndex, pageSize=500, membersArray, resolve, reject) {
+    getMembersPage(pageIndex, pageSize)
         .then(membersJSON => {
-            const retrievedMembers = membersArray.concat(membersJSON)
-
-            console.log(membersJSON)
-
+            console.log(`processing members ${membersJSON.Offset}-${membersJSON.Offset + membersJSON.Count} / ${membersJSON.TotalCount}`)
+            const retrievedMembers = membersArray.concat(parseMembers(membersJSON))
             if (membersJSON.HasNext) {
-                getMembers(pageIndex+1, retrievedMembers, resolve, reject)
+                getMembers(pageIndex+1, pageSize, retrievedMembers, resolve, reject)
             } else {
                 resolve(retrievedMembers)
             }
@@ -119,9 +137,6 @@ function getMembers(pageIndex, membersArray, resolve, reject) {
 }
 
 function parseMembers(membersJSON) {
-
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    console.log(membersJSON.length)
     
     members = _.map(membersJSON.Items.$values, (member) => {
         var memberInfo = member.Properties.$values
@@ -141,24 +156,6 @@ function parseMembers(membersJSON) {
             address: `${companyAddress1} ${companyAddress2} ${companyAddress3}, ${companyCity}, ${companyState}, ${companyZip}, ${companyCountry}`,
         }
     })
-
-    // todo: geocode each member
-    var testMember = members[0]
-    console.log(`geocoding address: ${testMember.address}`)
-
-    geocodingService.forwardGeocode({
-        query: testMember.address,
-        limit: 1
-    })
-        .send()
-        .then(response => {
-            var features =  _.find(response.body.features, { 'type': 'Feature' })
-            var coordinates = features.geometry.coordinates
-            console.log(`${testMember.id}: ${testMember.name} = ${features.place_name} (${coordinates})`)
-        })
-
-
-    // todo: write final geocoded results to file/mongodb
 
     return members
     
