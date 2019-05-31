@@ -30,7 +30,7 @@ ___  ___               _               _____ _
 `)
 
 // todo: get token dynamically instead of relying on environment variable
-var token = process.env.IAAPA_TOKEN || "o3J6ivJumTpnuyTSJYx7KrvnezIPk2gsFxs8j8ibV89imgM0IeWrsQWwqm8bQBx8eEUVkQWGUorDyB9VXBmJhoIv6BeI7djTg3BX4OS8jKImztr6Gq2FofJUxNaxa7nAZlL0-oq9FpsAjeqscMqvufN1nn9T0T1eBJnZeTwPkGPypp6S8JDID17_JJBrMY0_QMZ5ddDpZ2ICDjoAm0ZBuyazsw-9ajh_eTmR3gyhCzCw7W19MtMz9rciEFEEPnBZ5HIQxGA0H1fFjvW03CAWCLAXAHyKNWB2h_ZqGMFfrOPFm3nM34fozHi5Y86Z11OZPCqfQhd-pYbgRbHySdNguExt0q2zppQ26YAFDFL1zT2UAOq4OGCshBKEamOXOr8wymAy3vA9WytnrCG5SxFPXnNU-e2GGVoYtME1JI9q0F4qjqlFk6N0E1mHzO71AvAmf1Y5TFjpEhCHknM4DI-x2lWt4y68ytcMAvf7-Y5zFC1WG6rJ2kjAJfGCj9aZS0CBYZt6iM51yV0Ln8nIadm9yDU6oK9sJbcU2-_xqDhTRgv5X6JLhgOuHwTUUiAe9WCp"
+var token = process.env.IAAPA_TOKEN
 
 var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
 
