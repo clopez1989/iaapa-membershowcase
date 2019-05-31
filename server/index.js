@@ -114,21 +114,28 @@ function geocodeMembers(members) {
 
                 // filter out data without coordinates
                 var geocodedMembers = _.filter(data, 'coordinates')
-                
+
                 // convert to geojson
-                var geoJSON = _.map(geocodedMembers, member => {
-                    return {
-                        "type": "Feature",
-                        "geometry": {
-                            "type": "Point",
-                            "coordinates": member.coordinates
-                        },
-                        "properties": {
-                            "name": member.name,
-                            "id": member.id
+                var geoJSON = {
+                    type: 'FeatureCollection',
+                    crs: {
+                        type: 'name',
+                        properties: { name: 'urn:ogc:def:crs:OGC:1.3:CRS84' }
+                    },
+                    features: _.map(geocodedMembers, member => {
+                        return {
+                            "type": "Feature",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": member.coordinates
+                            },
+                            "properties": {
+                                "name": member.name,
+                                "id": member.id
+                            }
                         }
-                    }
-                })
+                    })
+                }
 
                 // save geojson file
                 fs.writeFileSync('members.geojson', JSON.stringify(geoJSON))
