@@ -30,10 +30,19 @@ ___  ___               _               _____ _
 `)
 
 // todo: get token dynamically instead of relying on environment variable
-var token = process.env.IAAPA_TOKEN
+var token = process.env.IAAPA_TOKEN || "o3J6ivJumTpnuyTSJYx7KrvnezIPk2gsFxs8j8ibV89imgM0IeWrsQWwqm8bQBx8eEUVkQWGUorDyB9VXBmJhoIv6BeI7djTg3BX4OS8jKImztr6Gq2FofJUxNaxa7nAZlL0-oq9FpsAjeqscMqvufN1nn9T0T1eBJnZeTwPkGPypp6S8JDID17_JJBrMY0_QMZ5ddDpZ2ICDjoAm0ZBuyazsw-9ajh_eTmR3gyhCzCw7W19MtMz9rciEFEEPnBZ5HIQxGA0H1fFjvW03CAWCLAXAHyKNWB2h_ZqGMFfrOPFm3nM34fozHi5Y86Z11OZPCqfQhd-pYbgRbHySdNguExt0q2zppQ26YAFDFL1zT2UAOq4OGCshBKEamOXOr8wymAy3vA9WytnrCG5SxFPXnNU-e2GGVoYtME1JI9q0F4qjqlFk6N0E1mHzO71AvAmf1Y5TFjpEhCHknM4DI-x2lWt4y68ytcMAvf7-Y5zFC1WG6rJ2kjAJfGCj9aZS0CBYZt6iM51yV0Ln8nIadm9yDU6oK9sJbcU2-_xqDhTRgv5X6JLhgOuHwTUUiAe9WCp"
+
+var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
 
 getToken()
-getMembers()
+
+new Promise((resolve, reject) => {
+    getMembers(0, [], resolve, reject)
+})
+    .then(response => {
+        console.log(response)
+        console.log("DONE!!!!!!!!!!")
+    })
 
 function getToken() {
     if (token == undefined || token == "") {
@@ -43,59 +52,76 @@ function getToken() {
     }
 }
 
-function getMembers() {
+function getMembersPage(pageIndex=0, pageSize=500) {
 
-    // reserve memory for data
-    var chunks = []
+    console.log(`getMembersPage(${pageIndex}, ${pageSize})`)
 
-    // this seems to be the max defined by IMIS
-    var queryLimit = 500
-    var queryName = '$/IAAPA_Globe/IAAPA_Globe'
+    return new Promise((resolve, reject) => {
+        // reserve memory for data
+        var chunks = []
+        var queryName = '$/IAAPA_Globe/IAAPA_Globe'
 
-    // make request
-    const req = https.request(
-        // options
-        {
-            hostname: 'services.iaapa.org',
-            port: 443,
-            method: 'GET',
-            path: `/Asi.Scheduler_IAAPA_Prod_Imis/api/IQA?QueryName=${queryName}&Limit=${queryLimit}`,
-            headers: { 'Authorization': 'Bearer ' + token }
-        },
-        // response
-        (res) => {
+        // make request
+        const req = https.request(
+            // options
+            {
+                hostname: 'services.iaapa.org',
+                port: 443,
+                method: 'GET',
+                path: `/Asi.Scheduler_IAAPA_Prod_Imis/api/IQA?QueryName=${queryName}&Limit=${pageSize}&Offset=${pageIndex * pageSize}`,
+                headers: { 'Authorization': 'Bearer ' + token }
+            },
+            // response
+            (res) => {
 
-            if (res.statusCode != 200) {
-                console.error(`${chalk.red('✗')}    statusCode ${res.statusCode}`)
+                if (res.statusCode != 200) {
+                    console.error(`${chalk.red('✗')}    statusCode ${res.statusCode}`)
+                    reject(res.toString())
+                }
+                res.on('data', (d) => {
+                    chunks.push(d)
+                })
+                res.on('end', () => {
+                    
+                    // combine data into a single string
+                    var body = Buffer.concat(chunks).toString()
+
+                    // convert to JSON
+                    var membersJSON = JSON.parse(body)
+
+                    resolve(membersJSON)
+                })
+        })
+
+        // handle error
+        req.on('error', (error) => {
+            console.error(`${chalk.red('✗')}    ${error}`)
+            reject(error)
+        })
+
+        req.end()
+    })
+}
+
+function getMembers(pageIndex, membersArray, resolve, reject) {
+    getMembersPage(pageIndex)
+        .then(membersJSON => {
+            const retrievedMembers = membersArray.concat(membersJSON)
+
+            console.log(membersJSON)
+
+            if (membersJSON.HasNext) {
+                getMembers(pageIndex+1, retrievedMembers, resolve, reject)
+            } else {
+                resolve(retrievedMembers)
             }
-            res.on('data', (d) => {
-                chunks.push(d)
-            })
-            res.on('end', () => {
-                
-                // combine data into a single string
-                var body = Buffer.concat(chunks).toString()
-
-                // convert to JSON
-                var membersJSON = JSON.parse(body)
-
-                // todo: continue requesting until membersJSON.HasNext == false
-                console.log(`parsing members ${membersJSON.Offset + membersJSON.Count} / ${membersJSON.TotalCount}`)
-                
-                // parse the JSON
-                parseMembers(membersJSON)
-            })
-    })
-
-    // handle error
-    req.on('error', (error) => {
-        console.error(`${chalk.red('✗')}    ${error}`)
-    })
-
-    req.end()
+        })
 }
 
 function parseMembers(membersJSON) {
+
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    console.log(membersJSON.length)
     
     members = _.map(membersJSON.Items.$values, (member) => {
         var memberInfo = member.Properties.$values
@@ -117,17 +143,24 @@ function parseMembers(membersJSON) {
     })
 
     // todo: geocode each member
+    var testMember = members[0]
+    console.log(`geocoding address: ${testMember.address}`)
+
     geocodingService.forwardGeocode({
-        query: 'Paris, France',
+        query: testMember.address,
         limit: 1
     })
         .send()
         .then(response => {
-            console.log(response.body)
+            var features =  _.find(response.body.features, { 'type': 'Feature' })
+            var coordinates = features.geometry.coordinates
+            console.log(`${testMember.id}: ${testMember.name} = ${features.place_name} (${coordinates})`)
         })
 
 
-    // todo: write final geocoded results to file
+    // todo: write final geocoded results to file/mongodb
+
+    return members
     
 }
 
