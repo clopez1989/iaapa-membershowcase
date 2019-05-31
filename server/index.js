@@ -1,3 +1,7 @@
+// todo: get token dynamically instead of relying on environment variable
+const IAPPA_TOKEN = process.env.IAAPA_TOKEN
+const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN
+
 const https = require('https')
     ,chalk = require('chalk')
     ,_ = require('lodash')
@@ -5,8 +9,6 @@ const https = require('https')
     ,mbxClient = require('@mapbox/mapbox-sdk')
     ,mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
     ,pLimit = require('p-limit')
-
-const MAPBOX_TOKEN = "pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2pzbHdpeDY1MXdqYjQ5cDZ0am8zcWVvaCJ9.T58s8aUnx0yhcjyNTQ3fEA"
 
 const baseClient = mbxClient({accessToken: MAPBOX_TOKEN })
 const geocodingService = mbxGeocoding(baseClient)
@@ -31,35 +33,31 @@ ___  ___               _               _____ _
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ${chalk.yellow('★')}  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `)
 
-// todo: get token dynamically instead of relying on environment variable
-var token = process.env.IAAPA_TOKEN
-
 var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
 
-// todo: check for members.json, and timestamp before loading from API
+getTokens()
 
+// check for members.json, and timestamp before loading from API
 if (fs.existsSync('./members.json')) {
-    
-    console.log('found members.json')
 
     // is it recent?
     var mtime = fs.statSync('./members.json').mtime
     var hoursSinceModified = (new Date() - mtime) / (1000 * 60 * 60)
     
     if (hoursSinceModified > expirationHours) {
-        console.log(`members.json is ${hoursSinceModified} hours old, getting a new one now...`)
+        console.log(`${chalk.blue('ⓘ')}    members.json is ${hoursSinceModified} hours old, getting a new one now...`)
         downloadMembers()
     } else {
-        console.log(`members.json is only ${hoursSinceModified} hours old, so using that`)
+        console.log(`${chalk.green('✓')}    members.json is only ${hoursSinceModified} hours old, so using that`)
 
         geocodeMembers(JSON.parse(fs.readFileSync('./members.json')))
     }
 } else {
+    console.log(`${chalk.red('✗')}    members.json not found, generating now...`)
     downloadMembers()
 }
 
 function downloadMembers() {
-    getToken()
 
     new Promise((resolve, reject) => {
         getMembers(0, 500, [], resolve, reject)
@@ -140,11 +138,17 @@ function geocodeMembers(members) {
     asyncGeocode()
 }
 
-function getToken() {
-    if (token == undefined || token == "") {
+function getTokens() {
+    if (IAPPA_TOKEN == undefined || IAPPA_TOKEN == "") {
         console.error(`${chalk.red('✗')}    IAAPA_TOKEN environment variable not set!`)
     } else {
         console.error(`${chalk.green('✓')}    IAAPA_TOKEN environment variable loaded`)
+    }
+
+    if (MAPBOX_TOKEN == undefined || MAPBOX_TOKEN == "") {
+        console.error(`${chalk.red('✗')}    MAPBOX_TOKEN environment variable not set!`)
+    } else {
+        console.error(`${chalk.green('✓')}    MAPBOX_TOKEN environment variable loaded`)
     }
 }
 
@@ -163,7 +167,7 @@ function getMembersPage(pageIndex=0, pageSize=500) {
                 port: 443,
                 method: 'GET',
                 path: `/Asi.Scheduler_IAAPA_Prod_Imis/api/IQA?QueryName=${queryName}&Limit=${pageSize}&Offset=${pageIndex * pageSize}`,
-                headers: { 'Authorization': 'Bearer ' + token }
+                headers: { 'Authorization': 'Bearer ' + IAPPA_TOKEN }
             },
             // response
             (res) => {
@@ -171,6 +175,7 @@ function getMembersPage(pageIndex=0, pageSize=500) {
                 if (res.statusCode != 200) {
                     console.error(`${chalk.red('✗')}    statusCode ${res.statusCode}`)
                     reject(res.toString())
+                    done = true
                 }
                 res.on('data', (d) => {
                     chunks.push(d)
@@ -200,7 +205,7 @@ function getMembersPage(pageIndex=0, pageSize=500) {
 function getMembers(pageIndex, pageSize=500, membersArray, resolve, reject) {
     getMembersPage(pageIndex, pageSize)
         .then(membersJSON => {
-            console.log(`processing members ${membersJSON.Offset}-${membersJSON.Offset + membersJSON.Count} / ${membersJSON.TotalCount}`)
+            console.log(`${chalk.blue('⇩')}    getting members ${membersJSON.Offset}-${membersJSON.Offset + membersJSON.Count} / ${membersJSON.TotalCount}`)
             const retrievedMembers = membersArray.concat(parseMembers(membersJSON))
             if (membersJSON.HasNext) {
                 getMembers(pageIndex+1, pageSize, retrievedMembers, resolve, reject)
