@@ -1,7 +1,3 @@
-// todo: get token dynamically instead of relying on environment variable
-const IAPPA_TOKEN = process.env.IAAPA_TOKEN
-const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN
-
 const https = require('https')
     ,chalk = require('chalk')
     ,_ = require('lodash')
@@ -9,6 +5,11 @@ const https = require('https')
     ,mbxClient = require('@mapbox/mapbox-sdk')
     ,mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
     ,pLimit = require('p-limit')
+
+// todo: get token dynamically instead of relying on environment variable
+require('dotenv').config()
+const IAPPA_TOKEN = process.env.IAAPA_TOKEN
+const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN
 
 const baseClient = mbxClient({accessToken: MAPBOX_TOKEN })
 const geocodingService = mbxGeocoding(baseClient)
@@ -71,7 +72,7 @@ function downloadMembers() {
 function geocodeMembers(members) {
     
     // grab a small sample size for testing
-    var members = _.sampleSize(members, 20)
+    var members = _.sampleSize(members, 200)
 
     const limit = pLimit(1)
     var input = []
@@ -93,10 +94,14 @@ function geocodeMembers(members) {
                     member.coordinates = coordinates
                     
                     } catch (err) {
-                        console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): ${member.address}`)
+                        console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): location not found`)
                         //reject(`could not geocode ${member.name} (${member.id}): ${member.address}`)
                     }
 
+                    resolve(member)
+                })
+                .catch(err => {
+                    console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): ${err.message}`)
                     resolve(member)
                 })
             })
