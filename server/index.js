@@ -4,7 +4,7 @@ const https = require('https')
     ,fs = require('fs')
     ,mbxClient = require('@mapbox/mapbox-sdk')
     ,mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
-    ,PromisePool = require('es6-promise-pool')
+    ,pLimit = require('p-limit')
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2pzbHdpeDY1MXdqYjQ5cDZ0am8zcWVvaCJ9.T58s8aUnx0yhcjyNTQ3fEA"
 
@@ -12,6 +12,7 @@ const baseClient = mbxClient({accessToken: MAPBOX_TOKEN })
 const geocodingService = mbxGeocoding(baseClient)
 
 const version = "v0.0.1"
+const expirationHours = 24 * 7 // week
 
 console.log(`
  _____  ___ ____________  ___  
@@ -45,15 +46,19 @@ if (fs.existsSync('./members.json')) {
     var mtime = fs.statSync('./members.json').mtime
     var hoursSinceModified = (new Date() - mtime) / (1000 * 60 * 60)
     
-    // once per week
-    if (hoursSinceModified > 24 * 7) {
-        // todo: download file again
+    if (hoursSinceModified > expirationHours) {
+        console.log(`members.json is ${hoursSinceModified} hours old, getting a new one now...`)
+        downloadMembers()
+    } else {
+        console.log(`members.json is only ${hoursSinceModified} hours old, so using that`)
+
+        geocodeMembers(JSON.parse(fs.readFileSync('./members.json')))
     }
-
-    console.log(`members.json is only ${hoursSinceModified} hours old, so using that`)
-
-    geocodeMembers(JSON.parse(fs.readFileSync('./members.json')))
 } else {
+    downloadMembers()
+}
+
+function downloadMembers() {
     getToken()
 
     new Promise((resolve, reject) => {
@@ -66,46 +71,73 @@ if (fs.existsSync('./members.json')) {
 }
 
 function geocodeMembers(members) {
-    var sampleMembers = _.sampleSize(members, 20)
-        //sampleMembers = members
+    
+    // grab a small sample size for testing
+    var members = _.sampleSize(members, 20)
 
-        // todo: replace with https://github.com/sindresorhus/p-limit
-        var promiseProducer = function() {
-            _.map(sampleMembers, member => {
-                return new Promise((resolve, reject) => {
+    const limit = pLimit(1)
+    var input = []
+    
+    _.map(members, member => {
+        input.push(limit(() => {
+            return new Promise((resolve, reject) => {
+                geocodingService.forwardGeocode({
+                    query: member.address,
+                    limit: 1
+                })
+                .send()
+                .then(response => {
+                    try {
 
-                    geocodingService.forwardGeocode({
-                        query: member.address,
-                        limit: 1
-                    })
-                        .send()
-                        .then(response => {
-                            try {
-                            var features =  _.find(response.body.features, { 'type': 'Feature' })
-                            var coordinates = features.geometry.coordinates
-                            console.log(`${chalk.green('✓')}    ${member.name} (${member.id}): ${features.place_name} (${coordinates})`)
-                            } catch (err) {
-                                console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): ${member.address}`)
-                                reject(`could not geocode ${member.name} (${member.id}): ${member.address}`)
-                            }
-                            
-                            resolve(coordinates)
-                        })
+                    var features =  _.find(response.body.features, { 'type': 'Feature' })
+                    var coordinates = features.geometry.coordinates
+                    console.log(`${chalk.green('✓')}    ${member.name} (${member.id}): ${features.place_name} (${coordinates})`)
+                    member.coordinates = coordinates
+                    
+                    } catch (err) {
+                        console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): ${member.address}`)
+                        //reject(`could not geocode ${member.name} (${member.id}): ${member.address}`)
+                    }
+
+                    resolve(member)
                 })
             })
-        }
+        }))
+    })
 
-        var concurrency = 1
-        var pool = new PromisePool(promiseProducer, concurrency)
-        var poolPromise = pool.start()
-        poolPromise.then(function() {
-            done = true
-        }, function(err) {
-            console.log("rejected: " + err.message)
-        })
+    async function asyncGeocode() {
+        const result = await Promise.all(input)
+            .then(data => {
 
+                // filter out data without coordinates
+                var geocodedMembers = _.filter(data, 'coordinates')
+                
+                // convert to geojson
+                var geoJSON = _.map(geocodedMembers, member => {
+                    return {
+                        "type": "Feature",
+                        "geometry": {
+                            "type": "Point",
+                            "coordinates": member.coordinates
+                        },
+                        "properties": {
+                            "name": member.name,
+                            "id": member.id
+                        }
+                    }
+                })
 
-        // todo: write final geocoded results to file/mongodb
+                // save geojson file
+                fs.writeFileSync('members.geojson', JSON.stringify(geoJSON))
+
+                done = true
+            })
+            .catch(err => {
+                //done = true
+            })
+    }
+
+    asyncGeocode()
 }
 
 function getToken() {
@@ -204,6 +236,6 @@ function parseMembers(membersJSON) {
 }
 
 process.on('unhandledRejection', (reason, p) => {
-    //console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
     // application specific logging, throwing an error, or other logic here
-  });
+});
