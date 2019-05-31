@@ -4,6 +4,7 @@ const https = require('https')
     ,fs = require('fs')
     ,mbxClient = require('@mapbox/mapbox-sdk')
     ,mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
+    ,PromisePool = require('es6-promise-pool')
 
 const MAPBOX_TOKEN = "pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2pzbHdpeDY1MXdqYjQ5cDZ0am8zcWVvaCJ9.T58s8aUnx0yhcjyNTQ3fEA"
 
@@ -30,41 +31,68 @@ ___  ___               _               _____ _
 `)
 
 // todo: get token dynamically instead of relying on environment variable
-var token = process.env.IAAPA_TOKEN
+var token = process.env.IAAPA_TOKEN || "o3J6ivJumTpnuyTSJYx7KrvnezIPk2gsFxs8j8ibV89imgM0IeWrsQWwqm8bQBx8eEUVkQWGUorDyB9VXBmJhoIv6BeI7djTg3BX4OS8jKImztr6Gq2FofJUxNaxa7nAZlL0-oq9FpsAjeqscMqvufN1nn9T0T1eBJnZeTwPkGPypp6S8JDID17_JJBrMY0_QMZ5ddDpZ2ICDjoAm0ZBuyazsw-9ajh_eTmR3gyhCzCw7W19MtMz9rciEFEEPnBZ5HIQxGA0H1fFjvW03CAWCLAXAHyKNWB2h_ZqGMFfrOPFm3nM34fozHi5Y86Z11OZPCqfQhd-pYbgRbHySdNguExt0q2zppQ26YAFDFL1zT2UAOq4OGCshBKEamOXOr8wymAy3vA9WytnrCG5SxFPXnNU-e2GGVoYtME1JI9q0F4qjqlFk6N0E1mHzO71AvAmf1Y5TFjpEhCHknM4DI-x2lWt4y68ytcMAvf7-Y5zFC1WG6rJ2kjAJfGCj9aZS0CBYZt6iM51yV0Ln8nIadm9yDU6oK9sJbcU2-_xqDhTRgv5X6JLhgOuHwTUUiAe9WCp"
 
 var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
 
-getToken()
+// todo: check for members.json, and timestamp before loading from API
 
-new Promise((resolve, reject) => {
-    getMembers(0, 500, [], resolve, reject)
-})
-    .then(members => {
-        console.log("DONE!")
+if (fs.existsSync('./members.json')) {
+    console.log('using members.json...')
+    geocodeMembers(JSON.parse(fs.readFileSync('./members.json')))
+} else {
+    getToken()
 
-        // geocode a random member
-        var testMember = _.sample(members)
-        console.log(`geocoding address: ${testMember.address}`)
+    new Promise((resolve, reject) => {
+        getMembers(0, 500, [], resolve, reject)
+    })
+    .then(response => {
+        fs.writeFileSync('members.json', JSON.stringify(response))
+        geocodeMembers(response)
+    })
+}
 
-        geocodingService.forwardGeocode({
-            query: testMember.address,
-            limit: 1
-        })
-            .send()
-            .then(response => {
-                try {
-                var features =  _.find(response.body.features, { 'type': 'Feature' })
-                var coordinates = features.geometry.coordinates
-                console.log(`${chalk.green('✓')}    ${testMember.id}: ${testMember.name} = ${features.place_name} (${coordinates})`)
-                } catch (err) {
-                    console.error(`${chalk.red('✗')}    could not geocode ${testMember.name} (${testMember.id}): ${testMember.address}`)
-                }
-                done = true
+function geocodeMembers(members) {
+    var sampleMembers = _.sampleSize(members, 20)
+        //sampleMembers = members
+
+        var promiseProducer = function() {
+            _.map(sampleMembers, member => {
+                return new Promise((resolve, reject) => {
+
+                    geocodingService.forwardGeocode({
+                        query: member.address,
+                        limit: 1
+                    })
+                        .send()
+                        .then(response => {
+                            try {
+                            var features =  _.find(response.body.features, { 'type': 'Feature' })
+                            var coordinates = features.geometry.coordinates
+                            console.log(`${chalk.green('✓')}    ${member.name} (${member.id}): ${features.place_name} (${coordinates})`)
+                            } catch (err) {
+                                console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): ${member.address}`)
+                                reject(`could not geocode ${member.name} (${member.id}): ${member.address}`)
+                            }
+                            
+                            resolve(coordinates)
+                        })
+                })
             })
+        }
+
+        var concurrency = 1
+        var pool = new PromisePool(promiseProducer, concurrency)
+        var poolPromise = pool.start()
+        poolPromise.then(function() {
+            done = true
+        }, function(err) {
+            console.log("rejected: " + err.message)
+        })
 
 
         // todo: write final geocoded results to file/mongodb
-    })
+}
 
 function getToken() {
     if (token == undefined || token == "") {
@@ -161,3 +189,7 @@ function parseMembers(membersJSON) {
     
 }
 
+process.on('unhandledRejection', (reason, p) => {
+    //console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    // application specific logging, throwing an error, or other logic here
+  });
