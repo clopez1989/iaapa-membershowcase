@@ -38,7 +38,20 @@ var done = (function wait () { if (!done) setTimeout(wait, 1000) })();
 // todo: check for members.json, and timestamp before loading from API
 
 if (fs.existsSync('./members.json')) {
-    console.log('using members.json...')
+    
+    console.log('found members.json')
+
+    // is it recent?
+    var mtime = fs.statSync('./members.json').mtime
+    var hoursSinceModified = (new Date() - mtime) / (1000 * 60 * 60)
+    
+    // once per week
+    if (hoursSinceModified > 24 * 7) {
+        // todo: download file again
+    }
+
+    console.log(`members.json is only ${hoursSinceModified} hours old, so using that`)
+
     geocodeMembers(JSON.parse(fs.readFileSync('./members.json')))
 } else {
     getToken()
