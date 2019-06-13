@@ -7,6 +7,9 @@
 <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
 <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
 
+<script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.3.0/mapbox-gl-geocoder.min.js'></script>
+<link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.3.0/mapbox-gl-geocoder.css' type='text/css' />
+
 <style>
 body { margin:0; padding:0; -ms-content-zooming: none; overflow: hidden;}
 #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -33,7 +36,7 @@ background: #ee8a65;
 <button id='fly'>Fly</button>
  
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2pzbHdpeDY1MXdqYjQ5cDZ0am8zcWVvaCJ9.T58s8aUnx0yhcjyNTQ3fEA';
+mapboxgl.accessToken = 'pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2p3a3VkOHR1MDBwNTQ4cHA5dnlqdzZjbSJ9.nAiyhwEo3aQu6ndTF0kweQ';
 var map = new mapboxgl.Map({
 container: 'map',
 zoom: 8,
@@ -44,6 +47,11 @@ style: 'mapbox://styles/cglopez1989/cjun0whj849df1fnq2of37iky'
 });
  
 map.addControl(new mapboxgl.NavigationControl());
+
+map.addControl(new MapboxGeocoder({
+accessToken: mapboxgl.accessToken,
+mapboxgl: mapboxgl
+}));
  
 map.on('load', function() {
 // Add a new source from our GeoJSON data and set the
@@ -183,6 +191,8 @@ center: [
 40 + (Math.random() - 0.5) * 10]
 });
 });
+
+
 </script>
  
 </body>
