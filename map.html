@@ -9,31 +9,25 @@
 
 <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.3.0/mapbox-gl-geocoder.min.js'></script>
 <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.3.0/mapbox-gl-geocoder.css' type='text/css' />
+<link rel='stylesheet' href='/iaapa-membershowcase/iaapa-membershowcase/styles/output.css' type='text/css' />
 
-<style>
-body { margin:0; padding:0; -ms-content-zooming: none; overflow: hidden;}
-#map { position:absolute; top:0; bottom:0; width:100%; }
-#fly {
-display: block;
-position: relative;
-margin: 0px auto;
-width: 50%;
-height: 40px;
-padding: 10px;
-border: none;
-border-radius: 3px;
-font-size: 12px;
-text-align: center;
-color: #fff;
-background: #ee8a65;
-}
-</style>
 </head>
 <body>
- 
- 
-<div id='map'></div>
+
+    
+
+
+<div id='map' class='map pad2'></div>
 <button id='fly'>Fly</button>
+<a href="#menu" id="toggle"><span></span></a>
+
+    <div id="menu">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#about">About</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
  
 <script>
 mapboxgl.accessToken = 'pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2p3a3VkOHR1MDBwNTQ4cHA5dnlqdzZjbSJ9.nAiyhwEo3aQu6ndTF0kweQ';
@@ -46,20 +40,18 @@ center: [-81.43010461505332,28.415524456794216],
 style: 'mapbox://styles/cglopez1989/cjun0whj849df1fnq2of37iky'
 });
  
-map.addControl(new mapboxgl.NavigationControl());
+map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
 map.addControl(new MapboxGeocoder({
 accessToken: mapboxgl.accessToken,
-mapboxgl: mapboxgl
-}));
+mapboxgl: mapboxgl,
+}), 'bottom-left');
  
 map.on('load', function() {
 // Add a new source from our GeoJSON data and set the
 // 'cluster' option to true. GL-JS will add the point_count property to your source data.
-map.addSource("earthquakes", {
+map.addSource("iaapa-members", {
 type: "geojson",
-// Point to GeoJSON data. This example visualizes all M1.0+ earthquakes
-// from 12/22/15 to 1/21/16 as logged by USGS' Earthquake hazards program.
 data: "server/members.geojson",
 cluster: true,
 clusterMaxZoom: 14, // Max zoom to cluster points on
@@ -69,7 +61,7 @@ clusterRadius: 50 // Radius of each cluster when clustering points (defaults to 
 map.addLayer({
 id: "clusters",
 type: "circle",
-source: "earthquakes",
+source: "iaapa-members",
 filter: ["has", "point_count"],
 paint: {
 // Use step expressions (https://docs.mapbox.com/mapbox-gl-js/style-spec/#expressions-step)
@@ -81,9 +73,9 @@ paint: {
 "step",
 ["get", "point_count"],
 "#15bef0",
-100,
+2,
 "#e871ab",
-750,
+3,
 "#2f9e43"
 ],
 "circle-radius": [
@@ -101,7 +93,7 @@ paint: {
 map.addLayer({
 id: "cluster-count",
 type: "symbol",
-source: "earthquakes",
+source: "iaapa-members",
 filter: ["has", "point_count"],
 layout: {
 "text-field": "{point_count_abbreviated}",
@@ -113,25 +105,15 @@ layout: {
 map.addLayer({
 id: "unclustered-point",
 type: "circle",
-source: "earthquakes",
+source: "iaapa-members",
 filter: ["!", ["has", "point_count"]],
 paint: {
 "circle-color": "#11b4da",
-"circle-radius": 4,
+"circle-radius": 16,
 "circle-stroke-width": 1,
 "circle-stroke-color": "#fff"
 }
 });
-
-var layers = map.getStyle().layers;
- 
-var labelLayerId;
-for (var i = 0; i < layers.length; i++) {
-if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
-labelLayerId = layers[i].id;
-break;
-}
-}
  
 map.addLayer({
 'id': '3d-buildings',
@@ -158,12 +140,24 @@ map.addLayer({
 'fill-extrusion-opacity': .6
 }
 }, labelLayerId);
+
+var layers = map.getStyle().layers;
+
+buildLocationList(listings);
  
-// inspect a cluster on click
+var labelLayerId;
+for (var i = 0; i < layers.length; i++) {
+if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
+labelLayerId = layers[i].id;
+break;
+}
+}
+ 
+//*inspect a cluster on click
 map.on('click', 'clusters', function (e) {
 var features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
 var clusterId = features[0].properties.cluster_id;
-map.getSource('earthquakes').getClusterExpansionZoom(clusterId, function (err, zoom) {
+map.getSource('iaapa-members').getClusterExpansionZoom(clusterId, function (err, zoom) {
 if (err)
 return;
  
@@ -191,6 +185,78 @@ center: [
 40 + (Math.random() - 0.5) * 10]
 });
 });
+
+function buildLocationList(data) {
+    // Iterate through the list of stores
+    for (i = 0; i < data.features.length; i++) {
+      var currentFeature = data.features[i];
+      // Shorten data.feature.properties to `prop` so we're not
+      // writing this long form over and over again.
+      var prop = currentFeature.properties;
+      // Select the listing container in the HTML and append a div
+      // with the class 'item' for each store
+      var listings = document.getElementById('listings');
+      var listing = listings.appendChild(document.createElement('div'));
+      listing.className = 'item';
+      listing.id = 'listing-' + i;
+  
+      // Create a new link with the class 'title' for each store
+      // and fill it with the store address
+      var link = listing.appendChild(document.createElement('a'));
+      link.href = '#';
+      link.className = 'title';
+      link.dataPosition = i;
+      link.innerHTML = prop.address;
+  
+      // Create a new div with the class 'details' for each store
+      // and fill it with the city and phone number
+      var details = listing.appendChild(document.createElement('div'));
+      details.innerHTML = prop.city;
+      if (prop.phone) {
+        details.innerHTML += ' · ' + prop.phoneFormatted;
+      }
+    }
+  }
+
+  var theToggle = document.getElementById('toggle');
+
+// hasClass
+function hasClass(elem, className) {
+	return new RegExp(' ' + className + ' ').test(' ' + elem.className + ' ');
+}
+// addClass
+function addClass(elem, className) {
+    if (!hasClass(elem, className)) {
+    	elem.className += ' ' + className;
+    }
+}
+// removeClass
+function removeClass(elem, className) {
+	var newClass = ' ' + elem.className.replace( /[\t\r\n]/g, ' ') + ' ';
+	if (hasClass(elem, className)) {
+        while (newClass.indexOf(' ' + className + ' ') >= 0 ) {
+            newClass = newClass.replace(' ' + className + ' ', ' ');
+        }
+        elem.className = newClass.replace(/^\s+|\s+$/g, '');
+    }
+}
+// toggleClass
+function toggleClass(elem, className) {
+	var newClass = ' ' + elem.className.replace( /[\t\r\n]/g, " " ) + ' ';
+    if (hasClass(elem, className)) {
+        while (newClass.indexOf(" " + className + " ") >= 0 ) {
+            newClass = newClass.replace( " " + className + " " , " " );
+        }
+        elem.className = newClass.replace(/^\s+|\s+$/g, '');
+    } else {
+        elem.className += ' ' + className;
+    }
+}
+
+theToggle.onclick = function() {
+   toggleClass(this, 'on');
+   return false;
+}
 
 
 </script>
