@@ -14,7 +14,7 @@ const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN
 const baseClient = mbxClient({accessToken: MAPBOX_TOKEN })
 const geocodingService = mbxGeocoding(baseClient)
 
-const version = "v0.0.2"
+const version = "v0.2"
 const expirationHours = 24 * 7 // week
 
 console.log(`

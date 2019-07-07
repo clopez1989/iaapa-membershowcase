@@ -5,6 +5,23 @@ import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
 // custom scss
 import './../styles/input.scss'
 
+console.log(`
+ _____  ___ ____________  ___  
+|_   _|/ _ \\| ___ \\ ___ \\/ _ \\ 
+  | | / /_\\ \\ |_/ / |_/ / /_\\ \\
+  | | |  _  |  __/|  __/|  _  |
+ _| |_| | | | |   | |   | | | |
+ \\___/\\_| |_|_|   \\_|   \\_| |_/
+___  ___               _               _____ _                                      
+|  \\/  |              | |             /  ___| |                                     
+| .  . | ___ _ __ ___ | |__   ___ _ __\\ \`--.| |__   _____      _____  __ _ ___  ___ 
+| |\\/| |/ _ \\ '_ \` _ \\| '_ \\ / _ \\ '__|\`--. \\ '_ \\ / _ \\ \\ /\\ / / __|/ _\` / __|/ _ \\
+| |  | |  __/ | | | | | |_) |  __/ |  /\\__/ / | | | (_) \\ V  V / (__| (_| \\__ \\  __/
+\\_|  |_/\\___|_| |_| |_|_.__/ \\___|_|  \\____/|_| |_|\\___/ \\_/\\_/ \\___|\\__,_|___/\\___|
+                                                                client v${process.env.VERSION}.${process.env.BUILD}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ★  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+`)
+
 var MapboxGeocoder = require('@mapbox/mapbox-gl-geocoder')
 var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js')
 
@@ -144,8 +161,11 @@ map.on('load', function () {
     var layers = map.getStyle().layers;
 
     $.getJSON('server/members.geojson', data => {
+        
+        if (!data || !data.features) return
+        
+        console.log(`loaded ${data.features.length} listings`)
         listingsJSON = data
-        console.log(data)
         buildLocationList(data);
     })
 
@@ -192,7 +212,7 @@ document.getElementById('fly').addEventListener('click', function () {
 
 function buildLocationList(data) {
     // Iterate through the list of stores
-    for (i = 0; i < data.features.length; i++) {
+    for (var i = 0; i < data.features.length; i++) {
 
         var currentFeature = data.features[i];
         // Shorten data.feature.properties to `prop` so we're not

@@ -21,7 +21,8 @@ module.exports = {
   plugins: [
     new ExtractTextPlugin('style.css'),
     new webpack.DefinePlugin({
-      'process.env.BUILD': JSON.stringify(gitCommitCount)
+      'process.env.BUILD': JSON.stringify(gitCommitCount),
+      'process.env.VERSION': '0.2'
     }),
     new webpack.ProvidePlugin({
       $: 'jquery',
