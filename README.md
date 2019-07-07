@@ -17,7 +17,8 @@ npm install
 node index.js
 ```
 
-## Client (building the microsite)
+## Client
+This is the html/css/js that gets built and used as the microsite
 ### How to test
 Then, within the **iaapa-membershowcase** root, run the following commands
 ```bash
