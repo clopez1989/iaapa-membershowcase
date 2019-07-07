@@ -72,7 +72,7 @@ function downloadMembers() {
 function geocodeMembers(members) {
     
     // grab a small sample size for testing
-    var members = _.sampleSize(members, 200)
+    var members = _.sampleSize(members, 20)
 
     const limit = pLimit(1)
     var input = []
@@ -129,9 +129,11 @@ function geocodeMembers(members) {
                                 "type": "Point",
                                 "coordinates": member.coordinates
                             },
+                            "id": `place.${member.id}`,
+                            "place_type": ["place"],
+                            "place_name": member.name,
                             "properties": {
                                 "name": member.name,
-                                "place_name": member.name,
                                 "id": member.id
                             }
                         }

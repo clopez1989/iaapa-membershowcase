@@ -50,6 +50,13 @@ module.exports = {
     })
   ],
   devtool: 'source-map',
+  devServer: {
+    watchOptions: {
+      ignored: [
+        path.resolve(__dirname, 'server')
+      ]
+    }
+  },
   module: {
     rules: [
       {
