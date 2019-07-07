@@ -1,3 +1,6 @@
+var MapboxGeocoder = require('@mapbox/mapbox-gl-geocoder')
+var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js')
+
 mapboxgl.accessToken = 'pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2p3a3VkOHR1MDBwNTQ4cHA5dnlqdzZjbSJ9.nAiyhwEo3aQu6ndTF0kweQ';
 var map = new mapboxgl.Map({
     container: 'map',
