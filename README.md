@@ -16,6 +16,18 @@ npm install
 node index.js
 ```
 
+Then, within the **iaapa-membershowcase** root, run the following commands
+```bash
+npm install
+npm run test
+```
+
+to test, or if you just want to build run:
+```bash
+npm install
+npm run build
+```
+
 ### What it does
 The IAAPA Member Showcase Server performs the following tasks:
 #### 1. Download member info from iMIS API
