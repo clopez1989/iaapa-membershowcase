@@ -71,24 +71,11 @@ module.exports = {
       },
       {
         test: /\.(s*)css$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [
-            {
-              loader: 'css-loader',
-              options: {
-                minimize: true,
-                sourceMap: true
-              }
-            },
-            {
-              loader: 'sass-loader',
-              options: {
-                sourceMap: true
-              }
-            }
-          ]
-        })
+        use: [
+            "style-loader", // creates style nodes from JS strings
+            "css-loader", // translates CSS into CommonJS
+            "sass-loader" // compiles Sass to CSS, using Node Sass by default
+        ]
       },
       {
         test: /\.(png|jpg|gif)$/,

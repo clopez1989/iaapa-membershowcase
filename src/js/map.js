@@ -1,3 +1,10 @@
+// mapbox css
+import 'mapbox-gl/dist/mapbox-gl.css'
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
+
+// custom scss
+import './../styles/input.scss'
+
 var MapboxGeocoder = require('@mapbox/mapbox-gl-geocoder')
 var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js')
 
