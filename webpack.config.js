@@ -1,6 +1,7 @@
 const path = require('path')
   ,webpack = require('webpack')
   , {CleanWebpackPlugin} = require('clean-webpack-plugin')
+  ,Dotenv = require('dotenv-webpack')
   ,HtmlWebpackPlugin = require('html-webpack-plugin')
   ,CopyWebpackPlugin = require('copy-webpack-plugin')
   ,UglifyJsPlugin = require('uglifyjs-webpack-plugin')
@@ -20,9 +21,9 @@ module.exports = {
   },
   plugins: [
     new ExtractTextPlugin('style.css'),
+    new Dotenv(),
     new webpack.DefinePlugin({
-      'process.env.BUILD': JSON.stringify(gitCommitCount),
-      'process.env.VERSION': '0.2'
+      'process.env.BUILD': JSON.stringify(gitCommitCount)
     }),
     new webpack.ProvidePlugin({
       $: 'jquery',

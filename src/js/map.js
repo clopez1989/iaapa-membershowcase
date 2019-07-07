@@ -24,15 +24,16 @@ ___  ___               _               _____ _
 
 var MapboxGeocoder = require('@mapbox/mapbox-gl-geocoder')
 var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js')
+var _ = require('lodash')
 
-mapboxgl.accessToken = 'pk.eyJ1IjoiY2dsb3BlejE5ODkiLCJhIjoiY2p3a3VkOHR1MDBwNTQ4cHA5dnlqdzZjbSJ9.nAiyhwEo3aQu6ndTF0kweQ';
+mapboxgl.accessToken = process.env.MAPBOX_TOKEN
 var map = new mapboxgl.Map({
     container: 'map',
     zoom: 8,
     pitch: 60, // pitch in degrees
     bearing: 0, // bearing in degrees
     center: [-81.43010461505332, 28.415524456794216],
-    style: 'mapbox://styles/cglopez1989/cjun0whj849df1fnq2of37iky'
+    style: process.env.MAPBOX_STYLE
 });
 
 map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
@@ -44,20 +45,19 @@ map.addControl(new MapboxGeocoder({
     mapboxgl: mapboxgl,
 }), 'bottom-left');
 
-var listingsJSON
-
 function customGeocoder(query) {
-    var customData = listingsJSON
+    
+    if(!listingsJSON || !listingsJSON.features) return
+
     var matchingFeatures = []
-    for (var i = 0; i < customData.features.length; i++) {
-        var feature = customData.features[i]
+    for (var i = 0; i < listingsJSON.features.length; i++) {
+        var feature = listingsJSON.features[i]
         // handle queries with different capitalization than the source data by calling toLowerCase()
         if (feature.properties.name.toLowerCase().search(query.toLowerCase()) !== -1) {
             // add a tree emoji as a prefix for custom data results
             // using carmen geojson format: https://github.com/mapbox/carmen/blob/master/carmen-geojson.md
-            feature['place_name'] = '🌲 ' + feature.properties.name
+            feature['place_name'] = feature.properties.name
             feature['center'] = feature.geometry.coordinates
-            feature['place_type'] = ['park']
             matchingFeatures.push(feature)
         }
     }
@@ -160,15 +160,6 @@ map.on('load', function () {
 
     var layers = map.getStyle().layers;
 
-    $.getJSON('server/members.geojson', data => {
-        
-        if (!data || !data.features) return
-        
-        console.log(`loaded ${data.features.length} listings`)
-        listingsJSON = data
-        buildLocationList(data);
-    })
-
     var labelLayerId;
     for (var i = 0; i < layers.length; i++) {
         if (layers[i].type === 'symbol' && layers[i].layout['text-field']) {
@@ -176,6 +167,8 @@ map.on('load', function () {
             break;
         }
     }
+
+    flyToRandomLocation()
 
     //*inspect a cluster on click
     map.on('click', 'clusters', function (e) {
@@ -200,15 +193,36 @@ map.on('load', function () {
     });
 });
 
-document.getElementById('fly').addEventListener('click', function () {
-    // Fly to a random location by offsetting the point -74.50, 40
-    // by up to 5 degrees.
+$(document).on('click', '#fly', flyToRandomLocation)
+function flyToRandomLocation() {
+    
     map.flyTo({
-        center: [
-            -74.50 + (Math.random() - 0.5) * 10,
-            40 + (Math.random() - 0.5) * 10]
-    });
-});
+        center: _.sample(listingsJSON.features).geometry.coordinates,
+        zoom: 9,
+        bearing: 0,
+            
+        // These options control the flight curve, making it move
+        // slowly and zoom out almost completely before starting
+        // to pan.
+        speed: 0.2, // make the flying slow
+        curve: 1, // change the speed at which it zooms out
+            
+        // This can be any easing function: it takes a number between
+        // 0 and 1 and returns another number between 0 and 1.
+        easing: function (t) { return t; }
+    })
+
+}
+
+var listingsJSON
+$.getJSON('server/members.geojson', data => {
+        
+    if (!data || !data.features) return
+    
+    console.log(`loaded ${data.features.length} listings`)
+    listingsJSON = data
+    buildLocationList(data);
+})
 
 function buildLocationList(data) {
     // Iterate through the list of stores
@@ -233,44 +247,4 @@ function buildLocationList(data) {
         link.dataPosition = i;
         link.innerHTML = prop.name;
     }
-}
-
-var theToggle = document.getElementById('toggle');
-
-// hasClass
-function hasClass(elem, className) {
-    return new RegExp(' ' + className + ' ').test(' ' + elem.className + ' ');
-}
-// addClass
-function addClass(elem, className) {
-    if (!hasClass(elem, className)) {
-        elem.className += ' ' + className;
-    }
-}
-// removeClass
-function removeClass(elem, className) {
-    var newClass = ' ' + elem.className.replace(/[\t\r\n]/g, ' ') + ' ';
-    if (hasClass(elem, className)) {
-        while (newClass.indexOf(' ' + className + ' ') >= 0) {
-            newClass = newClass.replace(' ' + className + ' ', ' ');
-        }
-        elem.className = newClass.replace(/^\s+|\s+$/g, '');
-    }
-}
-// toggleClass
-function toggleClass(elem, className) {
-    var newClass = ' ' + elem.className.replace(/[\t\r\n]/g, " ") + ' ';
-    if (hasClass(elem, className)) {
-        while (newClass.indexOf(" " + className + " ") >= 0) {
-            newClass = newClass.replace(" " + className + " ", " ");
-        }
-        elem.className = newClass.replace(/^\s+|\s+$/g, '');
-    } else {
-        elem.className += ' ' + className;
-    }
-}
-
-theToggle.onclick = function () {
-    toggleClass(this, 'on');
-    return false;
 }
