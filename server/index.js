@@ -14,7 +14,7 @@ const MAPBOX_TOKEN = process.env.MAPBOX_TOKEN
 const baseClient = mbxClient({accessToken: MAPBOX_TOKEN })
 const geocodingService = mbxGeocoding(baseClient)
 
-const version = "v0.0.1"
+const version = "v0.0.2"
 const expirationHours = 24 * 7 // week
 
 console.log(`
@@ -45,7 +45,7 @@ if (fs.existsSync('./members.json')) {
     var mtime = fs.statSync('./members.json').mtime
     var hoursSinceModified = (new Date() - mtime) / (1000 * 60 * 60)
     
-    if (hoursSinceModified > expirationHours) {
+    if (false && hoursSinceModified > expirationHours) {
         console.log(`${chalk.blue('ⓘ')}    members.json is ${hoursSinceModified} hours old, getting a new one now...`)
         downloadMembers()
     } else {
@@ -131,6 +131,7 @@ function geocodeMembers(members) {
                             },
                             "properties": {
                                 "name": member.name,
+                                "place_name": member.name,
                                 "id": member.id
                             }
                         }
@@ -254,5 +255,6 @@ function parseMembers(membersJSON) {
 
 process.on('unhandledRejection', (reason, p) => {
     console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+    console.log(reason)
     // application specific logging, throwing an error, or other logic here
 });
