@@ -1,7 +1,8 @@
 # IAAPA Member Showcase
-description...
+This codebase contains both the server and the client for hosting the IAAPA Member Showcase microsite.
 
 ## Server
+The server downloads IAAPA members from IMIS (services.iaapa.org) and exports them to a geojson file with coordinate info.
 ### How to run
 First, edit the **.env** file inside of **iaapa-membershowcase/server** folder, replacing the iMIS API Token and MapBox API Token accordingly.
 
@@ -16,13 +17,16 @@ npm install
 node index.js
 ```
 
+## Client (building the microsite)
+### How to test
 Then, within the **iaapa-membershowcase** root, run the following commands
 ```bash
 npm install
 npm run test
 ```
 
-to test, or if you just want to build run:
+### How to build
+This does the same as the test command, but only builds the files and does not start a test server at localhost
 ```bash
 npm install
 npm run build
