@@ -1,10 +1,3 @@
-// mapbox css
-import 'mapbox-gl/dist/mapbox-gl.css'
-import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
-
-// custom scss
-import './../styles/input.scss'
-
 console.log(`
  _____  ___ ____________  ___  
 |_   _|/ _ \\| ___ \\ ___ \\/ _ \\ 
@@ -22,9 +15,17 @@ ___  ___               _               _____ _
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ ★  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 `)
 
+// requires
+var _ = require('lodash')
 var MapboxGeocoder = require('@mapbox/mapbox-gl-geocoder')
 var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js')
-var _ = require('lodash')
+
+// mapbox css
+import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
+import 'mapbox-gl/dist/mapbox-gl.css'
+
+// custom scss
+import './../styles/input.scss'
 
 mapboxgl.accessToken = process.env.MAPBOX_TOKEN
 var map = new mapboxgl.Map({
