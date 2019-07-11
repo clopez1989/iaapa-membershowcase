@@ -33,7 +33,7 @@ var map = new mapboxgl.Map({
     zoom: 8,
     pitch: 60, // pitch in degrees
     bearing: 0, // bearing in degrees
-    center: [-81.43010461505332, 28.415524456794216],
+    center: [-1.43010461505332, 8.415524456794216],
     style: process.env.MAPBOX_STYLE
 });
 
