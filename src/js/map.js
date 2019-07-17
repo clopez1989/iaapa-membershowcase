@@ -30,10 +30,10 @@ import './../styles/input.scss'
 mapboxgl.accessToken = process.env.MAPBOX_TOKEN
 var map = new mapboxgl.Map({
     container: 'map',
-    zoom: 8,
+    zoom: 3,
     pitch: 60, // pitch in degrees
     bearing: 0, // bearing in degrees
-    center: [-83.43010461505332, 27.415524456794216],
+    center: [-50.43010461505332, -50.415524456794216],
     style: process.env.MAPBOX_STYLE
 });
 
@@ -194,7 +194,7 @@ map.on('load', function () {
     });
 });
 
-$(document).on('click', '#fly', flyToRandomLocation)
+/*$(document).on('click', '#fly', flyToRandomLocation)*/
 function flyToRandomLocation() {
     
     map.flyTo({
