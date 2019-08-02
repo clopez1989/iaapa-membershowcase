@@ -5,6 +5,7 @@ const https = require('https')
     ,mbxClient = require('@mapbox/mapbox-sdk')
     ,mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding')
     ,pLimit = require('p-limit')
+    ,jsonexport = require('jsonexport')
 
 // todo: get token dynamically instead of relying on environment variable
 require('dotenv').config()
@@ -15,7 +16,7 @@ const baseClient = mbxClient({accessToken: MAPBOX_TOKEN })
 const geocodingService = mbxGeocoding(baseClient)
 
 const version = "v0.2"
-const expirationHours = 24 * 7 // week
+const expirationHours = 24 * 52 // year
 
 console.log(`
  _____  ___ ____________  ___  
@@ -74,6 +75,9 @@ function geocodeMembers(members) {
     // grab a small sample size for testing
     var members = _.sampleSize(members, 20)
 
+    // array to store any members that didn't return with valid coordinates
+    var invalidMembers = []
+
     const limit = pLimit(1)
     var input = []
     
@@ -96,6 +100,7 @@ function geocodeMembers(members) {
                     } catch (err) {
                         console.error(`${chalk.red('✗')}    ${member.name} (${member.id}): location not found`)
                         //reject(`could not geocode ${member.name} (${member.id}): ${member.address}`)
+                        invalidMembers.push(member)
                     }
 
                     resolve(member)
@@ -142,6 +147,15 @@ function geocodeMembers(members) {
 
                 // save geojson file
                 fs.writeFileSync('members.geojson', JSON.stringify(geoJSON))
+
+                // write invalid members json
+                if (invalidMembers && invalidMembers.length > 0) {
+                    jsonexport(invalidMembers, {rowDelimiter: '|'}, function(err, csv){
+                        if(err) return console.log(err)
+                        fs.writeFileSync('members-invalid.csv', csv)
+                        fs.writeFileSync('members-invalid.json', JSON.stringify(invalidMembers))
+                    })
+                }
 
                 done = true
             })
