@@ -19,6 +19,7 @@ ___  ___               _               _____ _
 var _ = require('lodash')
 var MapboxGeocoder = require('@mapbox/mapbox-gl-geocoder')
 var mapboxgl = require('mapbox-gl/dist/mapbox-gl.js')
+var IdleJs = require('idle-js')
 
 // mapbox css
 import '@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css'
@@ -26,6 +27,8 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 
 // custom scss
 import './../styles/input.scss'
+
+var idle = true
 
 mapboxgl.accessToken = process.env.MAPBOX_TOKEN
 var map = new mapboxgl.Map({
@@ -36,6 +39,30 @@ var map = new mapboxgl.Map({
     center: [-50.43010461505332, -50.415524456794216],
     style: process.env.MAPBOX_STYLE
 });
+
+
+var idlejs = new IdleJs({
+    idle: 1000 * 10, // idle time in ms
+    events: ['keydown', 'mousedown', 'touchstart'], // events that will trigger the idle resetter
+    onIdle: _ => {
+        console.log('IDLE')
+        idle = true
+        flyToRandomLocation()
+    },
+    onActive: _ => {
+        console.log('ACTIVE')
+        map.stop()
+        idle = false
+    },
+    onHide: function () {}, // callback function to be executed when window become hidden
+    onShow: function () {}, // callback function to be executed when window become visible
+    keepTracking: true, // set it to false if you want to be notified only on the first idleness change
+    startAtIdle: true // set it to true if you want to start in the idle state
+  })
+
+map.on('moveend', evt => {
+    if (idle) flyToRandomLocation()
+})
 
 map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
@@ -170,6 +197,7 @@ map.on('load', function () {
     }
 
     flyToRandomLocation()
+    idlejs.start()
 
     //*inspect a cluster on click
     map.on('click', 'clusters', function (e) {
