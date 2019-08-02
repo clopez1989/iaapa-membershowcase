@@ -12,7 +12,6 @@ var gitCommitCount = parseInt(childProcess.execSync('git rev-list HEAD --count')
 
 module.exports = {
   entry: {
-    app: './src/js/app.js',
     map: './src/js/map.js'
   },
   output: {
@@ -34,11 +33,6 @@ module.exports = {
     new HtmlWebpackPlugin({
         template: './src/index.html',
         filename: 'index.html',
-        chunks: ['app']
-    }),
-    new HtmlWebpackPlugin({
-        template: './src/map.html',
-        filename: 'map.html',
         chunks: ['map']
     }),
     new CopyWebpackPlugin([
