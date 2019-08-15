@@ -1,23 +1,67 @@
 body { margin:0; padding:0; }
 #map { position:absolute; top:0; bottom:0; width:100%; }
-#fly {
-display: block;
-position: relative;
-margin: 0px auto;
-width: 50%;
-height: 40px;
-padding: 10px;
-border: none;
-border-radius: 3px;
-font-size: 12px;
-text-align: center;
-color: #fff;
-background: #ee8a65;
-}
 .mapboxgl-ctrl-geocoder.mapboxgl-ctrl {
     margin-bottom: -22px;
     margin-left: 7px;
 }
 .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
     margin-bottom: -20px;
+}
+
+.mapboxgl-popup {
+    max-width: 200px;
+  }
+  
+.mapboxgl-popup-content {
+text-align: center;
+font-family: 'Open Sans', sans-serif;
+}
+#fullwidth-video{height: 50vw; min-height:50vh; position: relative;}
+        #fullwidth-video .fullwidth-video-bg {
+        position: absolute; z-index: 1; top: 0px; left: 0px; bottom:
+        0px; right: 0px; overflow: hidden;
+        background-size: cover; background-color: transparent; background-repeat: no-repeat;}
+        .sldtext {z-index: 2;}
+        #fullwidth-video video {
+        margin: auto; position: absolute; z-index: 1; top: 50%; left: 0%;
+        transform: translate(0%, -50%); visibility: visible;
+        opacity: 1; width: 100%; height: 100%; object-fit: cover;}
+        
+body{
+    margin:0px;
+}
+.bottomMenu{
+    background-color: white;
+    padding: 20px !important;
+    text-align: center;
+    z-index: 2;
+    position: fixed;
+    bottom: 11px;
+    right: 63px;
+    border-radius: 5px;
+}
+.lightbox {
+	/** Default lightbox to hidden */
+	display: none;
+	/** Position and style */
+	position: fixed;
+	z-index: 999;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	top: 0;
+	left: 0;
+	background: rgba(0,0,0,0.8);
+}
+.lightbox img {
+	/** Pad the lightbox image */
+	max-width: 90%;
+	max-height: 80%;
+	margin-top: 2%;
+}
+.lightbox:target {
+	/** Remove default browser outline */
+	outline: none;
+	/** Unhide lightbox **/
+	display: block;
 }
