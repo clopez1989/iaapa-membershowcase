@@ -184,7 +184,7 @@ map.on('load', function () {
             ],
             'fill-extrusion-opacity': .6
         }
-    }, labelLayerId);
+    });
 
     var layers = map.getStyle().layers;
 
@@ -198,6 +198,18 @@ map.on('load', function () {
 
     flyToRandomLocation()
     idlejs.start()
+
+    map.on('mouseenter', 'unclustered-point', evt => {
+        var pointProperties = evt.features[0].properties
+
+        // name
+        console.log(pointProperties.name)
+
+        createPopUp(evt.features[0])
+
+        // no other useful data is in the listingsJSON but if it were, get it like this:
+        //console.log(_.find(listingsJSON.features, {  properties: { id: pointProperties.id.toString() }}))
+    })
 
     //*inspect a cluster on click
     map.on('click', 'clusters', function (e) {
@@ -225,6 +237,9 @@ map.on('load', function () {
 
 /*$(document).on('click', '#fly', flyToRandomLocation)*/
 function flyToRandomLocation() {
+
+    // TODO: don't just return, this is a workaround
+    return
     
     map.flyTo({
         center: _.sample(listingsJSON.features).geometry.coordinates,
@@ -264,6 +279,8 @@ function buildLocationList(data) {
         var prop = currentFeature.properties;
         // Select the listing container in the HTML and append a div
         // with the class 'item' for each store
+
+        // TODO: this dom element doesn't exist
         var listings = document.getElementById('listings');
         var listing = listings.appendChild(document.createElement('div'));
         listing.className = 'item';
@@ -279,14 +296,17 @@ function buildLocationList(data) {
     }
 }
 
-function createPopUp() {
+function createPopUp(currentFeature) {
     var popUps = document.getElementsByClassName('mapboxgl-popup');
     // Check if there is already a popup on the map and if so, remove it
     if (popUps[0]) popUps[0].remove();
-  
-    var popup = new mapboxgl.Popup({ closeOnClick: false })
+
+    var popup = new mapboxgl.Popup({ closeOnClick: false, closeButton: false })
       .setLngLat(currentFeature.geometry.coordinates)
-      .setHTML('<h3>Sweetgreen</h3>' +
-        '<h4>' + currentFeature.properties.address + '</h4>')
+      .setHTML(`<h3>${currentFeature.properties.name}</h3>`)
       .addTo(map);
+
+    map.on('mouseleave', 'unclustered-point', evt => {
+        popup.remove()
+    })
   }
